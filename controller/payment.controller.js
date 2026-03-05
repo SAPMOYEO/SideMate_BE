@@ -4,9 +4,9 @@
 // - deletePayment: 구독 해지(상태 변경 + 추가분 소멸)
 // - getPayments/getPayment: 결제 내역 조회
 
-const Payment = require("../models/Payment");
-const Subscription = require("../models/Subscription");
-const AiQuota = require("../models/AiQuota");
+const Payment = require("../model/Payment");
+const Subscription = require("../model/Subscription");
+const AiQuota = require("../model/AiQuota");
 
 const { TOPUP_UNIT_PRICE_KRW, PLANS } = require("../constants/plans");
 const { addOneMonthCalendar } = require("../utils/date.util");
