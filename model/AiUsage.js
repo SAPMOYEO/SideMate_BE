@@ -3,6 +3,9 @@
 //*** mongoose 세팅 ***//
 const mongoose = require("mongoose");
 
+// const User = require("./User");
+// const Project = require("./Project");
+
 const aiUsageSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.ObjectId, ref: User, required: true },

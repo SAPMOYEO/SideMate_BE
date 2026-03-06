@@ -2,7 +2,7 @@
 // - createPayment: 1회성 결제 or 구독 시작 결제
 // - updatePayment: 구독 플랜 변경(결제 기록 생성 + 구독/쿼터 갱신)
 // - deletePayment: 구독 해지(상태 변경 + 추가분 소멸)
-// - getPayments/getPayment: 결제 내역 조회
+// - getPayments/getPaymentDetail: 결제 내역 조회 / 결제내역 상세조회
 
 const Payment = require("../model/Payment");
 const Subscription = require("../model/Subscription");
