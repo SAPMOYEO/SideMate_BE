@@ -19,7 +19,7 @@ const dbUri = process.env.DB_ADDRESS;
 mongoose
   .connect(dbUri)
   .then(() => console.log("mongoose connected"))
-  .catch((err) => console.log("DB connection fail, err"));
+  .catch((err) => console.log("DB connection failed", err));
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
