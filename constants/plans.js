@@ -13,5 +13,5 @@ module.exports = {
   },
 
   // HOLD 만료 기본 시간(분)
-  HOLD_EXPIRE_MINUTES: 3,
+  HOLD_EXPIRE_MINUTES: 1,
 };
