@@ -14,9 +14,9 @@ const aiQuotaSchema = new mongoose.Schema(
     freeCycleAnchorAt: { type: Date }, // 무료 플랜 시작일
     freeResetAt: { type: Date }, // 무료 플랜 시작일 + 1개월(달력기준)
 
-    // 구독 플랜 : Basic, Premium
+    // 구독 플랜 : Basic, Premium / 현재 남아있는 구독 추가분
     subExtraRemaining: { type: Number, default: 0, min: 0 }, // 비구독 사용자는 0 -> default:0
-    subExtraResetAt: { type: Date }, // 다음 결제일 = Subscription.currentPeriodEnd
+    subExtraResetAt: { type: Date }, // 다음 결제일,리셋일 = Subscription.currentPeriodEnd
 
     // - 기간마다 지급되는 추가분
     subGrantPerPeriod: { type: Number, default: 0, min: 0 }, // basic : 2추가, premium : 5 추가
