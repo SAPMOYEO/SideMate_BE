@@ -4,11 +4,20 @@ const adminController = require("../controller/admin.controller");
 
 const router = express.Router();
 
-router.get("/users", adminController.getUsers);
-router.get("/projects", adminController.getProjects);
-router.get("/notifications", adminController.getNotifications);
-router.get("/banners", adminController.getBanners);
-router.post("/banners", adminController.createBanner);
-router.patch("/banners/:id", adminController.updateBanner);
-router.delete("/banners/:id", adminController.deleteBanner);
+router.get("/users", /*인증관련, 어드민 체크*/ adminController.getUsers);
+router.get("/projects", /*인증관련, 어드민 체크*/ adminController.getProjects);
+router.get(
+  "/notifications",
+  /*인증관련, 어드민 체크*/ adminController.getNotifications,
+);
+router.get("/banners", /*인증관련, 어드민 체크*/ adminController.getBanners);
+router.post("/banners", /*인증관련, 어드민 체크*/ adminController.createBanner);
+router.patch(
+  "/banners/:id",
+  /*인증관련, 어드민 체크*/ adminController.updateBanner,
+);
+router.delete(
+  "/banners/:id",
+  /*인증관련, 어드민 체크*/ adminController.deleteBanner,
+);
 module.exports = router;
