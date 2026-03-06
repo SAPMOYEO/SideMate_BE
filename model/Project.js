@@ -57,9 +57,8 @@ const projectSchema = Schema({
     },gitUrl: {
         type: String
     },aiFeedbackIds: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Feedback',
-        required: true
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Feedback'
     },hiddenYn: {
         type: Boolean,
         default: false,
