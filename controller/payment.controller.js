@@ -114,7 +114,7 @@ paymentController.createPayment = async (req, res) => {
 
       const quota = await AiQuota.findOneAndUpdate(
         { userId },
-        { $inc: { topupRemaining: qty } },
+        { $inc: { topUpRemaining: qty } },
         { new: true },
       );
 
@@ -284,7 +284,7 @@ paymentController.deletePayment = async (req, res) => {
       { new: true },
     );
 
-    // 중도 해지 시 구독 추가분 소멸. free/topup은 유지.
+    // 중도 해지 시 구독 추가분 소멸. free/topUp은 유지.
     const quota = await AiQuota.findOneAndUpdate(
       { userId },
       {
