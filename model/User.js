@@ -28,17 +28,17 @@ const userSchema = Schema(
       required: true,
       default: "user",
     },
-    techStacks: {
-      type: [String],
-      default: [],
-    },
     profile: {
       type: {
-        gender: {
+        profileImage: {
+          type: String,
+        },
+        bio: {
           type: String,
         },
         techStack: {
           type: [String],
+          default: [],
         },
         gitUrl: {
           type: String,
