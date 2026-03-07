@@ -3,8 +3,8 @@
 //*** mongoose 세팅 ***//
 const mongoose = require("mongoose");
 
-// const User = require("./User");
-// const Project = require("./Project");
+const User = require("./User");
+const Project = require("./Project");
 
 const aiUsageSchema = new mongoose.Schema(
   {

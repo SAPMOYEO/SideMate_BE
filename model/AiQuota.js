@@ -3,7 +3,7 @@
 //*** mongoose 세팅 ***//
 const mongoose = require("mongoose");
 
-// const User = require("./User");
+const User = require("./User");
 
 const aiQuotaSchema = new mongoose.Schema(
   {
