@@ -20,7 +20,9 @@ userController.register = async (req, res) => {
       password: hashedPassword,
       name,
       phone,
-      techStacks,
+      profile: {
+        techStack: techStacks || [],
+      },
       marketingAgree: terms.marketing,
     });
 
@@ -64,6 +66,27 @@ userController.getUser = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) throw new Error("유저를 찾을 수 없습니다.");
 
+    res.status(200).json({ status: "success", user });
+  } catch (error) {
+    res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
+userController.updateUser = async (req, res) => {
+  try {
+    const { userId } = req;
+    const { name, profile } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        name,
+        profile: profile,
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!user) throw new Error("유저를 찾을 수 없습니다.");
     res.status(200).json({ status: "success", user });
   } catch (error) {
     res.status(400).json({ status: "fail", message: error.message });
