@@ -6,7 +6,15 @@ const router = express.Router();
 router.post("/", authController.authenticate, projectController.createProject);
 router.get("/", projectController.getProjects);
 router.get("/:id", projectController.getProject);
-router.put("/:id", authController.authenticate, projectController.updateProject);
-router.delete("/:id", authController.authenticate, projectController.deleteProject);
+router.put(
+  "/:id",
+  authController.authenticate,
+  projectController.updateProject,
+);
+router.delete(
+  "/:id",
+  authController.authenticate,
+  projectController.deleteProject,
+);
 
 module.exports = router;

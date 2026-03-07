@@ -1,3 +1,4 @@
+const User = require("../model/User");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
@@ -22,4 +23,16 @@ authController.authenticate = (req, res, next) => {
   }
 };
 
+authController.isAdminCheck = async (req, res, next) => {
+  try {
+    const { userId } = req;
+    const user = await User.findById(userId);
+    console.log("isAdminCheck - user:", user.role);
+    if (user.role !== "admin") throw new Error("관리자 권한이 없습니다.");
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(403).json({ status: "fail", message: error.message });
+  }
+};
 module.exports = authController;
