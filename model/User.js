@@ -53,6 +53,7 @@ const userSchema = Schema(
     tier: {
       type: String,
       required: true,
+      enum: ["FREE", "BASIC", "PREMIUM"],
       default: "FREE",
     },
     marketingAgree: {
