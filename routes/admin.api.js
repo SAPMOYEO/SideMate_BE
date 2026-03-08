@@ -11,6 +11,7 @@ router.get("/users", adminController.getUsers);
 router.patch("/users/:id", adminController.activeUser);
 
 router.get("/projects", adminController.getProjects);
+router.patch("/projects/:id/hidden", adminController.updateProjectHiddenYn);
 router.get("/notifications", adminController.getNotifications);
 
 router.get("/banners", adminController.getBanners);
