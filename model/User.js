@@ -21,7 +21,12 @@ const userSchema = Schema(
     },
     phone: {
       type: String,
-      required: true,
+      required: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     role: {
       type: String,

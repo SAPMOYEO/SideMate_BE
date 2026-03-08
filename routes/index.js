@@ -7,6 +7,7 @@ const aiUsageApi = require("./aiUsage.api");
 const projectApi = require("./project.api");
 const adminApi = require("./admin.api");
 const userApi = require("./user.api");
+const authApi = require("./auth.api");
 
 router.use("/project", projectApi);
 router.use("/admin", adminApi);
@@ -14,5 +15,6 @@ router.use("/user", userApi);
 router.use("/payment", paymentApi);
 router.use("/aiquota", aiQuotaApi);
 router.use("/aiusage", aiUsageApi);
+router.use("/auth", authApi);
 
 module.exports = router;
