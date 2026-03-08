@@ -1,118 +1,262 @@
-const Project = require('../model/Project');
-const PAGE_SIZE = process.env.PAGE_SIZE;
+﻿const Project = require('../model/Project');
+const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10;
 const projectController = {};
 
-projectController.createProject = async(req, res) => {
-    try {
-        const {title, category, description, goal, startDate, endDate, requiredTechStack, mandatoryTechStack, recruitRoles, totalCnt, deadline, communicationMethod, status, gitUrl, aiFeedbackIds} = req.body;
-        const {userId} = req;
-        const project = new Project({title, category, description, goal, startDate, endDate, requiredTechStack, mandatoryTechStack, recruitRoles, totalCnt, deadline, communicationMethod, status, gitUrl, aiFeedbackIds, author: userId});
+const toArray = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim());
+  }
 
-        await project.save();
+  if (value && typeof value === 'object') {
+    return Object.values(value)
+      .filter((item) => typeof item === 'string' && item.trim())
+      .map((item) => item.trim());
+  }
 
-        return res.status(200).json({status: 'success', project});
-    } catch (error) {
-        return res.status(400).json({status: 'fail', message: error.message});
-    }
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+
+  return [];
 };
 
-projectController.getProjects = async(req, res) => {
-    try {
-        const {page, title, category, startDate, endDate, requiredTechStack, recruitRoles, deadlineStartDate, deadlineEndDate, communicationMethod, status} = req.query;
-        const condition = {hiddenYn: false};
+const toSingle = (value) => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
 
-        if(title){
-            condition.title = {$regex: title, $options: 'i'};
-        }
-        if(category){
-            condition.category = category;
-        }
-        if(startDate){
-            condition.startDate = {$gte: new Date(startDate)};
-        }
-        if(endDate){
-            condition.endDate = {$lte: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1))};
-        }
-        if(requiredTechStack){
-            condition.requiredTechStack = requiredTechStack;
-        }
-        if(recruitRoles){
-            condition['recruitRoles.role'] = recruitRoles;
-        }
-        if(deadlineStartDate && deadlineEndDate){
-            condition.deadline = {$gte: new Date(deadlineStartDate), $lte: new Date(new Date(deadlineEndDate).setDate(new Date(deadlineEndDate).getDate() + 1))};
-        } else{
-            if(deadlineStartDate){
-                condition.deadline = {$gte: new Date(deadlineStartDate)};
-            }
-            if(deadlineEndDate){
-                condition.deadline = {$lt: new Date(new Date(deadlineEndDate).setDate(new Date(deadlineEndDate).getDate() + 1))};
-            }
-        }
-        if(communicationMethod){
-            condition.communicationMethod = communicationMethod;
-        }
-        if(status){
-            condition.status = status;
-        }
+  if (value && typeof value === 'object') {
+    const values = Object.values(value);
+    return values[0];
+  }
 
-        let query = Project.find(condition);
-        let response = {status: 'success'};
-
-        if(page){
-            query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
-            const totalItemNum = await Project.countDocuments(condition);
-            const totalPageNum = Math.ceil(totalItemNum/PAGE_SIZE);
-            response.totalPageNum = totalPageNum;
-        }
-
-        const projectList = await query.exec();
-        response.data = projectList
-
-        return res.status(200).json(response);
-    } catch (error) {
-        return res.status(400).json({status: 'fail', message: error.message});
-    }
+  return value;
 };
 
-projectController.getProject = async(req, res) => {
-    try {
-        const projectId = req.params.id;
-        const project = await Project.findById(projectId);
+const parseDate = (value, endOfDay = false) => {
+  if (!value || typeof value !== 'string') return undefined;
 
-        if(project){
-            return res.status(200).json({status: 'success', data: project});
-        }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
 
-        throw new Error('해당 프로젝트를 찾을 수 없습니다.');
-    } catch (error) {
-        return res.status(400).json({status: 'fail', message: error.message});
-    }
+  if (endOfDay) {
+    date.setHours(23, 59, 59, 999);
+  } else {
+    date.setHours(0, 0, 0, 0);
+  }
+
+  return date;
 };
 
-projectController.updateProject = async(req, res) => {
-    try {
-        const projectId = req.params.id;
-        const {title, category, description, goal, startDate, endDate, requiredTechStack, mandatoryTechStack, recruitRoles, totalCnt, deadline, communicationMethod, status, gitUrl, aiFeedbackIds} = req.body;
-        const {userId} = req;
-        const project = await Project.findByIdAndUpdate({_id: projectId}, {title, category, description, goal, startDate, endDate, requiredTechStack, mandatoryTechStack, recruitRoles, totalCnt, deadline, communicationMethod, status, gitUrl, aiFeedbackIds, author: userId}, {new: true});
+projectController.createProject = async (req, res) => {
+  try {
+    const {
+      title,
+      category,
+      description,
+      goal,
+      startDate,
+      endDate,
+      requiredTechStack,
+      mandatoryTechStack,
+      recruitRoles,
+      totalCnt,
+      deadline,
+      communicationMethod,
+      status,
+      gitUrl,
+      aiFeedbackIds,
+    } = req.body;
 
-        return res.status(200).json({status: 'success', project});
-    } catch (error) {
-        return res.status(400).json({status: 'fail', message: error.message});
-    }
+    const { userId } = req;
+    const project = new Project({
+      title,
+      category,
+      description,
+      goal,
+      startDate,
+      endDate,
+      requiredTechStack,
+      mandatoryTechStack,
+      recruitRoles,
+      totalCnt,
+      deadline,
+      communicationMethod,
+      status,
+      gitUrl,
+      aiFeedbackIds,
+      author: userId,
+    });
+
+    await project.save();
+
+    return res.status(200).json({ status: 'success', project });
+  } catch (error) {
+    return res.status(400).json({ status: 'fail', message: error.message });
+  }
 };
 
-projectController.deleteProject = async(req, res) => {
-    try {
-        const projectId = req.params.id;
-        const {userId} = req;
-        await Project.findByIdAndDelete(projectId);
+projectController.getProjects = async (req, res) => {
+  try {
+    const filter =
+      req.query && typeof req.query.filter === 'object' && req.query.filter !== null
+        ? req.query.filter
+        : req.query;
 
-        return res.status(200).json({status: 'success'});
-    } catch (error) {
-        return res.status(400).json({status: 'fail', message: error.message});
+    const pageRaw = Number(toSingle(filter.page));
+    const limitRaw = Number(toSingle(filter.limit));
+    const sortRaw = toSingle(filter.sort);
+    const title = toSingle(filter.title);
+    const category = toArray(filter.category);
+    const requiredTechStack = toArray(filter.requiredTechStack);
+    const status = toSingle(filter.status);
+
+    const startDate = parseDate(toSingle(filter.startDate));
+    const endDate = parseDate(toSingle(filter.endDate), true);
+    const deadlineStartDate = parseDate(toSingle(filter.deadlineStartDate));
+    const deadlineEndDate = parseDate(toSingle(filter.deadlineEndDate), true);
+
+    const page = Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+    const limit = Number.isInteger(limitRaw) && limitRaw > 0 ? limitRaw : PAGE_SIZE;
+    const sort = sortRaw === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
+
+    const condition = { hiddenYn: false };
+
+    if (typeof title === 'string' && title.trim()) {
+      condition.title = { $regex: title.trim(), $options: 'i' };
     }
+
+    if (category.length) {
+      condition.category = { $in: category };
+    }
+
+    if (requiredTechStack.length) {
+      condition.requiredTechStack = { $in: requiredTechStack };
+    }
+
+    if (typeof status === 'string' && status.trim()) {
+      condition.status = status.trim();
+    }
+
+    if (startDate) {
+      condition.startDate = { ...(condition.startDate || {}), $gte: startDate };
+    }
+
+    if (endDate) {
+      condition.endDate = { ...(condition.endDate || {}), $lte: endDate };
+    }
+
+    if (deadlineStartDate || deadlineEndDate) {
+      condition.deadline = {};
+
+      if (deadlineStartDate) {
+        condition.deadline.$gte = deadlineStartDate;
+      }
+
+      if (deadlineEndDate) {
+        condition.deadline.$lte = deadlineEndDate;
+      }
+    }
+
+    const totalCount = await Project.countDocuments(condition);
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+    const projectList = await Project.find(condition)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('author', 'name email')
+      .exec();
+
+    return res.status(200).json({
+      status: 'success',
+      data: projectList,
+      totalCount,
+      totalPages,
+      totalPageNum: totalPages,
+    });
+  } catch (error) {
+    return res.status(400).json({ status: 'fail', message: error.message });
+  }
+};
+
+projectController.getProject = async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const project = await Project.findById(projectId).populate('author', 'name email');
+
+    if (project) {
+      return res.status(200).json({ status: 'success', data: project });
+    }
+
+    throw new Error('Project not found');
+  } catch (error) {
+    return res.status(400).json({ status: 'fail', message: error.message });
+  }
+};
+
+projectController.updateProject = async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const {
+      title,
+      category,
+      description,
+      goal,
+      startDate,
+      endDate,
+      requiredTechStack,
+      mandatoryTechStack,
+      recruitRoles,
+      totalCnt,
+      deadline,
+      communicationMethod,
+      status,
+      gitUrl,
+      aiFeedbackIds,
+    } = req.body;
+
+    const { userId } = req;
+    const project = await Project.findByIdAndUpdate(
+      { _id: projectId },
+      {
+        title,
+        category,
+        description,
+        goal,
+        startDate,
+        endDate,
+        requiredTechStack,
+        mandatoryTechStack,
+        recruitRoles,
+        totalCnt,
+        deadline,
+        communicationMethod,
+        status,
+        gitUrl,
+        aiFeedbackIds,
+        author: userId,
+      },
+      { new: true },
+    );
+
+    return res.status(200).json({ status: 'success', project });
+  } catch (error) {
+    return res.status(400).json({ status: 'fail', message: error.message });
+  }
+};
+
+projectController.deleteProject = async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    await Project.findByIdAndDelete(projectId);
+
+    return res.status(200).json({ status: 'success' });
+  } catch (error) {
+    return res.status(400).json({ status: 'fail', message: error.message });
+  }
 };
 
 module.exports = projectController;
+
+

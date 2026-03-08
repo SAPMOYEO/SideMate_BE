@@ -1,4 +1,4 @@
-const bodyParser = require("body-parser");
+﻿const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -9,6 +9,7 @@ const indexRouter = require("./routes/index");
 const passport = require("passport");
 
 // Middleware
+app.set("query parser", "extended");
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
