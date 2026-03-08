@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const port = process.env.PORT;
 const indexRouter = require("./routes/index");
+const passport = require("passport");
 
 // Middleware
 app.set("query parser", "extended");
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
+app.use(passport.initialize());
 app.use("/api", indexRouter);
 
 const dbUri = process.env.DB_ADDRESS;
