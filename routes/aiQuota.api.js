@@ -4,7 +4,7 @@ const router = express.Router();
 const authController = require("../controller/auth.controller");
 const aiQuotaController = require("../controller/aiQuota.controller");
 
-// 내 사용량 조회
+// 내 남은 사용량 조회
 router.get("/", authController.authenticate, aiQuotaController.getMyQuota);
 
 // 실제 AI 사용 차감
