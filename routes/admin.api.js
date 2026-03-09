@@ -5,6 +5,10 @@ const authController = require("../controller/auth.controller");
 
 const router = express.Router();
 
+// 로그인은 인증 미들웨어 적용 전에 등록
+router.post("/login", adminController.adminLogin);
+
+// 이후 모든 라우트에 인증 미들웨어 적용
 router.use(authController.authenticate, authController.isAdminCheck);
 
 router.get("/users", adminController.getUsers);

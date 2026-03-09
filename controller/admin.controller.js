@@ -1,6 +1,9 @@
 const User = require("../model/User");
 const Banner = require("../model/Banner");
 const Project = require("../model/Project");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const adminController = {};
 
 adminController.getUsers = async (req, res) => {
@@ -43,7 +46,7 @@ adminController.activeUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { isActive } = req.body;
-    const user = await User.findByIdAndUpdate(id, { isActive }, { new: true });
+    const user = await User.findByIdAndUpdate(id, { isActive }, { returnDocument: "after" });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -94,15 +97,19 @@ adminController.updateProjectHiddenYn = async (req, res) => {
     const project = await Project.findByIdAndUpdate(
       id,
       { hiddenYn },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
-    res.status(200).json({ message: "Project updated successfully", data: project });
+    res
+      .status(200)
+      .json({ message: "Project updated successfully", data: project });
   } catch (err) {
-    res.status(500).json({ message: "Error updating project hidden status", error: err });
+    res
+      .status(500)
+      .json({ message: "Error updating project hidden status", error: err });
   }
 };
 adminController.getNotifications = (req, res) => {};
@@ -152,7 +159,7 @@ adminController.updateBanner = async (req, res) => {
     const updatedBanner = await Banner.findByIdAndUpdate(
       id,
       { imageUrl, isActive },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!updatedBanner) {
@@ -186,4 +193,30 @@ adminController.deleteBanner = async (req, res) => {
   }
 };
 
+adminController.adminLogin = async (req, res) => {
+  try {
+    const { name, password } = req.body;
+
+    const adminId = process.env.ADMIN_ID;
+    const adminPassword = process.env.ADMIN_PW;
+
+    if (name === adminId && password === adminPassword) {
+      // env var 기반 admin → DB 조회 없이 특수 payload로 JWT 생성
+      const token = jwt.sign({ _id: "admin", role: "admin" }, JWT_SECRET_KEY, {
+        expiresIn: "1d",
+      });
+      return res.status(200).json({
+        status: "success",
+        message: "Admin login successful",
+        token,
+      });
+    } else {
+      return res
+        .status(401)
+        .json({ status: "fail", message: "Invalid email or password" });
+    }
+  } catch (error) {
+    return res.status(500).json({ status: "fail", message: error.message });
+  }
+};
 module.exports = adminController;
