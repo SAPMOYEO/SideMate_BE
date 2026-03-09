@@ -21,7 +21,12 @@ const userSchema = Schema(
     },
     phone: {
       type: String,
-      required: true,
+      required: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     role: {
       type: String,
@@ -48,6 +53,7 @@ const userSchema = Schema(
     tier: {
       type: String,
       required: true,
+      enum: ["FREE", "BASIC", "PREMIUM"],
       default: "FREE",
     },
     marketingAgree: {

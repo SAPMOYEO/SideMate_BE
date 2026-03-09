@@ -4,6 +4,7 @@
 // - deletePayment: 구독 해지(상태 변경 + 추가분 소멸)
 // - getPayments/getPaymentDetail: 결제 내역 조회 / 결제내역 상세조회
 
+const User = require("../model/User");
 const Payment = require("../model/Payment");
 const Subscription = require("../model/Subscription");
 const AiQuota = require("../model/AiQuota");
@@ -152,7 +153,6 @@ paymentController.createPayment = async (req, res) => {
         { $inc: { topUpRemaining: qty } },
         { returnDocument: "after" },
       );
-
       return res.status(200).json({
         status: "success",
         payment,
@@ -210,11 +210,23 @@ paymentController.createPayment = async (req, res) => {
       { returnDocument: "after" },
     );
 
+    // 구독 플랜 결제 시 티어 변경하기
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          tier: plan === "basic" ? "BASIC" : "PREMIUM",
+        },
+      },
+      { new: true },
+    );
+
     return res.status(200).json({
       status: "success",
       payment,
       subscription,
       quota,
+      user,
     });
   } catch (err) {
     return res.status(400).json({
@@ -300,11 +312,22 @@ paymentController.updatePayment = async (req, res) => {
       { returnDocument: "after" },
     );
 
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          tier: plan === "basic" ? "BASIC" : "PREMIUM",
+        },
+      },
+      { new: true },
+    );
+
     return res.status(200).json({
       status: "success",
       payment,
       subscription,
       quota,
+      user,
     });
   } catch (err) {
     return res.status(400).json({
@@ -359,10 +382,21 @@ paymentController.deletePayment = async (req, res) => {
       { returnDocument: "after" },
     );
 
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          tier: "FREE",
+        },
+      },
+      { new: true },
+    );
+
     return res.status(200).json({
       status: "success",
       subscription,
       quota,
+      user,
     });
   } catch (err) {
     return res.status(400).json({
