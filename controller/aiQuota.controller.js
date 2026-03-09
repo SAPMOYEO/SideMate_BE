@@ -10,7 +10,7 @@ async function ensureQuotaDoc(userId) {
   if (!quota) {
     quota = await AiQuota.create({
       userId,
-      freeRemaining: 0,
+      freeRemaining: 3,
       topUpRemaining: 0,
       subGrantPerPeriod: 0,
       subCarryCap: 0,
