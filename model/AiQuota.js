@@ -25,6 +25,9 @@ const aiQuotaSchema = new mongoose.Schema(
     // 1회성 충전 크래딧, 만료 기간 없음
     topUpRemaining: { type: Number, default: 0, min: 0 }, // 기본유저 충전 안 한 상태 -> default:0
 
+    // 총 사용량
+    totalUsed: { type: Number, default: 0, min: 0 },
+
     // 실패시 차감 0 관리
     holds: {
       topUp: { type: Number, default: 0, min: 0 },
