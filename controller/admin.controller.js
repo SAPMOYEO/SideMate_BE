@@ -46,7 +46,11 @@ adminController.activeUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { isActive } = req.body;
-    const user = await User.findByIdAndUpdate(id, { isActive }, { returnDocument: "after" });
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isActive },
+      { returnDocument: "after" },
+    );
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
