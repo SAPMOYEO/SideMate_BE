@@ -140,8 +140,10 @@ adminController.getBanners = async (req, res) => {
 };
 adminController.createBanner = async (req, res) => {
   try {
+    console.log(req.body);
     const { imageUrl, isActive } = req.body;
 
+    console.log(imageUrl, isActive);
     const newBanner = new Banner({ imageUrl, isActive });
 
     await newBanner.save();
@@ -151,6 +153,7 @@ adminController.createBanner = async (req, res) => {
       data: newBanner,
     });
   } catch (err) {
+    console.error("createBanner error:", err.message, err.name);
     res.status(500).json({ message: "Error creating banner", error: err });
   }
 };
