@@ -1,7 +1,7 @@
 ﻿const mongoose = require('mongoose');
 const Application = require('../model/Application');
 const Project = require('../model/Project');
-const PAGE_SIZE = Number(process.env.APPLICATION_PAGE_SIZE) || 10;
+const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10;
 
 const applicationController = {};
 
@@ -12,7 +12,7 @@ const parsePositiveInt = (value, fallback) => {
 
 applicationController.createApplication = async (req, res) => {
   try {
-    const { project, role, motivation, profileOfferYn } = req.body;
+    const { project, role, motivation } = req.body;
     const { userId } = req;
 
     if (!project || !role || !motivation) {
@@ -62,7 +62,6 @@ applicationController.createApplication = async (req, res) => {
       applicant: userId,
       role,
       motivation,
-      profileOfferYn: Boolean(profileOfferYn),
     });
 
     await application.save();
@@ -140,11 +139,10 @@ applicationController.updateApplication = async (req, res) => {
       });
     }
 
-    const { role, motivation, profileOfferYn, status } = req.body;
+    const { role, motivation, status } = req.body;
 
     if (role !== undefined) application.role = role;
     if (motivation !== undefined) application.motivation = motivation;
-    if (profileOfferYn !== undefined) application.profileOfferYn = Boolean(profileOfferYn);
     if (status !== undefined) application.status = status;
 
     await application.save();
