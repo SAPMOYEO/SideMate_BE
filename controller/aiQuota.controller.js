@@ -10,10 +10,10 @@ async function ensureQuotaDoc(userId) {
   if (!quota) {
     quota = await AiQuota.create({
       userId,
-      freeRemaining: 0,
+      freeRemaining: 3,
       topUpRemaining: 0,
-      subExtraGrantPerPeriod: 0,
-      subExtraCarryCap: 0,
+      subGrantPerPeriod: 0,
+      subCarryCap: 0,
       subExtraRemaining: 0,
       subExtraResetAt: null,
       totalUsed: 0,
@@ -100,6 +100,9 @@ aiQuotaController.consumeQuota = async (req, res) => {
     quota.totalUsed += amount;
     await quota.save();
 
+    const totalRemaining =
+      (quota.freeRemaining || 0) + (quota.topUpRemaining || 0) + (quota.subExtraRemaining || 0);
+
     return res.status(200).json({
       status: "success",
       message: "QUOTA_CONSUMED",
@@ -110,6 +113,14 @@ aiQuotaController.consumeQuota = async (req, res) => {
         fromFree: useFree,
       },
       quota,
+      summary: {
+        freeRemaining: quota.freeRemaining,
+        topUpRemaining: quota.topUpRemaining,
+        subExtraRemaining: quota.subExtraRemaining,
+        totalRemaining,
+        totalUsed: quota.totalUsed,
+        subExtraResetAt: quota.subExtraResetAt,
+      },
     });
   } catch (err) {
     return res.status(400).json({
@@ -139,10 +150,21 @@ aiQuotaController.addFreeQuota = async (req, res) => {
       { new: true },
     );
 
+    const totalRemaining =
+      (quota.freeRemaining || 0) + (quota.topUpRemaining || 0) + (quota.subExtraRemaining || 0);
+
     return res.status(200).json({
       status: "success",
       message: "FREE_QUOTA_ADDED",
       quota,
+      summary: {
+        freeRemaining: quota.freeRemaining,
+        topUpRemaining: quota.topUpRemaining,
+        subExtraRemaining: quota.subExtraRemaining,
+        totalRemaining,
+        totalUsed: quota.totalUsed,
+        subExtraResetAt: quota.subExtraResetAt,
+      },
     });
   } catch (err) {
     return res.status(400).json({
