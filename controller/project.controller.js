@@ -1,5 +1,5 @@
 ﻿const Project = require('../model/Project');
-const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10;
+const PAGE_SIZE = Number(process.env.PROJECT_PAGE_SIZE) || 5;
 const projectController = {};
 
 const toArray = (value) => {
