@@ -13,7 +13,9 @@ const userSchema = Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return this.provider === "local";
+      },
     },
     name: {
       type: String,
@@ -22,11 +24,6 @@ const userSchema = Schema(
     phone: {
       type: String,
       required: false,
-    },
-    googleId: {
-      type: String,
-      unique: true,
-      sparse: true,
     },
     role: {
       type: String,
@@ -63,6 +60,29 @@ const userSchema = Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    privacySettings: {
+      isImagePublic: { type: Boolean, default: false },
+      isEmailPublic: { type: Boolean, default: false },
+      isGithubPublic: { type: Boolean, default: false },
+      isBioPublic: { type: Boolean, default: false },
+    },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    provider: {
+      type: String,
+      required: true,
+      enum: ["local", "google"],
+      default: "local",
     },
   },
   { timestamps: true },

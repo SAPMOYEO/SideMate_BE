@@ -14,8 +14,18 @@ router.get(
     session: false,
   }),
   async (req, res) => {
-    const token = await req.user.generateToken();
+    if (req.user.isNewUser) {
+      const tempToken = jwt.sign(
+        { googleId: req.user.googleId, isNewUser: true },
+        process.env.JWT_SECRET_KEY,
+        { expiresIn: "30m" },
+      );
+      return res.redirect(
+        `http://localhost:5173/onboarding?token=${tempToken}`,
+      );
+    }
 
+    const token = await req.user.generateToken();
     res.redirect(`http://localhost:5173/login?token=${token}`);
   },
 );
