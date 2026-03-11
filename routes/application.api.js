@@ -3,7 +3,16 @@ const applicationController = require("../controller/application.controller");
 const authController = require("../controller/auth.controller");
 const router = express.Router();
 
-router.post("/", authController.authenticate, applicationController.createApplication);
+router.post(
+  "/",
+  authController.authenticate,
+  applicationController.createApplication,
+);
+router.get(
+  "/me",
+  authController.authenticate,
+  applicationController.getMyApplication,
+);
 router.get("/:id", applicationController.getApplication);
 router.put(
   "/:id",

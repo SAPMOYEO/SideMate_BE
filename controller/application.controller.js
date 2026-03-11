@@ -1,6 +1,6 @@
-﻿const mongoose = require('mongoose');
-const Application = require('../model/Application');
-const Project = require('../model/Project');
+﻿const mongoose = require("mongoose");
+const Application = require("../model/Application");
+const Project = require("../model/Project");
 const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10;
 
 const applicationController = {};
@@ -17,31 +17,33 @@ applicationController.createApplication = async (req, res) => {
 
     if (!project || !role || !motivation) {
       return res.status(400).json({
-        status: 'fail',
-        message: 'project, role, motivation은 필수입니다.',
+        status: "fail",
+        message: "project, role, motivation은 필수입니다.",
       });
     }
 
     if (!mongoose.Types.ObjectId.isValid(project)) {
       return res.status(400).json({
-        status: 'fail',
-        message: '유효하지 않은 프로젝트 아이디입니다.',
+        status: "fail",
+        message: "유효하지 않은 프로젝트 아이디입니다.",
       });
     }
 
-    const targetProject = await Project.findById(project).select('author').lean();
+    const targetProject = await Project.findById(project)
+      .select("author")
+      .lean();
 
     if (!targetProject) {
       return res.status(404).json({
-        status: 'fail',
-        message: '프로젝트를 찾을 수 없습니다.',
+        status: "fail",
+        message: "프로젝트를 찾을 수 없습니다.",
       });
     }
 
     if (String(targetProject.author) === String(userId)) {
       return res.status(400).json({
-        status: 'fail',
-        message: '본인이 등록한 프로젝트에는 지원할 수 없습니다.',
+        status: "fail",
+        message: "본인이 등록한 프로젝트에는 지원할 수 없습니다.",
       });
     }
 
@@ -52,8 +54,8 @@ applicationController.createApplication = async (req, res) => {
 
     if (duplicated) {
       return res.status(409).json({
-        status: 'fail',
-        message: '이미 지원한 프로젝트입니다.',
+        status: "fail",
+        message: "이미 지원한 프로젝트입니다.",
       });
     }
 
@@ -66,9 +68,9 @@ applicationController.createApplication = async (req, res) => {
 
     await application.save();
 
-    return res.status(200).json({ status: 'success', application });
+    return res.status(200).json({ status: "success", application });
   } catch (error) {
-    return res.status(400).json({ status: 'fail', message: error.message });
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
@@ -79,14 +81,15 @@ applicationController.getApplication = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
       return res.status(400).json({
-        status: 'fail',
-        message: '유효하지 않은 프로젝트 아이디입니다.',
+        status: "fail",
+        message: "유효하지 않은 프로젝트 아이디입니다.",
       });
     }
 
     const page = parsePositiveInt(req.query.page, 1);
     const limit = parsePositiveInt(req.query.limit, PAGE_SIZE);
-    const sort = req.query.sort === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
+    const sort =
+      req.query.sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
 
     const condition = { project: projectId };
 
@@ -97,17 +100,17 @@ applicationController.getApplication = async (req, res) => {
       .sort(sort)
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate('applicant', 'name email')
+      .populate("applicant", "name email")
       .exec();
 
     return res.status(200).json({
-      status: 'success',
+      status: "success",
       data: applications,
       totalCount,
       totalPages,
     });
   } catch (error) {
-    return res.status(400).json({ status: 'fail', message: error.message });
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
@@ -118,8 +121,8 @@ applicationController.updateApplication = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(applicationId)) {
       return res.status(400).json({
-        status: 'fail',
-        message: '유효하지 않은 지원 아이디입니다.',
+        status: "fail",
+        message: "유효하지 않은 지원 아이디입니다.",
       });
     }
 
@@ -127,15 +130,15 @@ applicationController.updateApplication = async (req, res) => {
 
     if (!application) {
       return res.status(404).json({
-        status: 'fail',
-        message: '지원 정보를 찾을 수 없습니다.',
+        status: "fail",
+        message: "지원 정보를 찾을 수 없습니다.",
       });
     }
 
     if (String(application.applicant) !== String(userId)) {
       return res.status(403).json({
-        status: 'fail',
-        message: '본인 지원 정보만 수정할 수 있습니다.',
+        status: "fail",
+        message: "본인 지원 정보만 수정할 수 있습니다.",
       });
     }
 
@@ -147,9 +150,9 @@ applicationController.updateApplication = async (req, res) => {
 
     await application.save();
 
-    return res.status(200).json({ status: 'success', application });
+    return res.status(200).json({ status: "success", application });
   } catch (error) {
-    return res.status(400).json({ status: 'fail', message: error.message });
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
@@ -160,8 +163,8 @@ applicationController.deleteApplication = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(applicationId)) {
       return res.status(400).json({
-        status: 'fail',
-        message: '유효하지 않은 지원 아이디입니다.',
+        status: "fail",
+        message: "유효하지 않은 지원 아이디입니다.",
       });
     }
 
@@ -169,24 +172,49 @@ applicationController.deleteApplication = async (req, res) => {
 
     if (!application) {
       return res.status(404).json({
-        status: 'fail',
-        message: '지원 정보를 찾을 수 없습니다.',
+        status: "fail",
+        message: "지원 정보를 찾을 수 없습니다.",
       });
     }
 
     if (String(application.applicant) !== String(userId)) {
       return res.status(403).json({
-        status: 'fail',
-        message: '본인 지원 정보만 삭제할 수 있습니다.',
+        status: "fail",
+        message: "본인 지원 정보만 삭제할 수 있습니다.",
       });
     }
 
     await Application.deleteOne({ _id: applicationId });
 
-    return res.status(200).json({ status: 'success' });
+    return res.status(200).json({ status: "success" });
   } catch (error) {
-    return res.status(400).json({ status: 'fail', message: error.message });
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
+// id (userId)
+applicationController.getMyApplication = async (req, res) => {
+  try {
+    const { userId } = req;
 
+    const page = parsePositiveInt(req.query.page, 1);
+    const limit = parsePositiveInt(req.query.limit, PAGE_SIZE);
+    const sort =
+      req.query.sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
+
+    const condition = { applicant: userId };
+    const totalCount = await Application.countDocuments(condition);
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+    const applications = await Application.find({ applicant: userId })
+      .sort(sort)
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .populate("project", "title status deadline recruitRoles");
+
+    return res
+      .status(200)
+      .json({ status: "success", data: applications, totalPages, totalCount });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
+  }
+};
 module.exports = applicationController;
