@@ -11,14 +11,18 @@ cloudinary.config({
 });
 
 const userController = {};
-
 userController.register = async (req, res) => {
   try {
     const { email, password, name, phone, techStacks, terms } = req.body;
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
       throw new Error("이미 가입된 이메일입니다.");
+    }
+
+    const phoneExists = await User.findOne({ phone });
+    if (phoneExists) {
+      throw new Error("이미 사용 중인 휴대폰 번호입니다.");
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -33,6 +37,12 @@ userController.register = async (req, res) => {
         techStack: techStacks || [],
       },
       marketingAgree: terms.marketing,
+      privacySettings: {
+        isImagePublic: false,
+        isEmailPublic: false,
+        isGithubPublic: false,
+        isBioPublic: false,
+      },
     });
 
     await newUser.save();
@@ -40,6 +50,81 @@ userController.register = async (req, res) => {
     return res.status(200).json({ status: "success", user: newUser });
   } catch (error) {
     return res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
+userController.registerSocialUser = async (req, res, next) => {
+  try {
+    const {
+      googleId,
+      email,
+      name,
+      phone,
+      techStacks,
+      profileImage,
+      marketingAgree,
+    } = req.body;
+
+    if (!email || !name) {
+      throw new Error("필수 정보(이메일, 이름)가 누락되었습니다.");
+    }
+
+    console.log("1. FE에서 넘어온 이미지 URL:", profileImage);
+
+    let finalProfileImage = profileImage || "";
+
+    if (
+      profileImage &&
+      (profileImage.includes("googleusercontent") ||
+        profileImage.includes("ggpht"))
+    ) {
+      try {
+        console.log("2. Cloudinary 업로드 시도 중...");
+        const uploadResponse = await cloudinary.uploader.upload(profileImage, {
+          folder: "sidemate_profiles",
+          use_filename: true,
+        });
+        if (uploadResponse.secure_url) {
+          finalProfileImage = uploadResponse.secure_url;
+          console.log("3. Cloudinary 업로드 성공! 새 URL:", finalProfileImage);
+        }
+      } catch (uploadError) {
+        console.error(
+          "Cloudinary 구글 이미지 업로드 실패:",
+          uploadError.message,
+        );
+      }
+    } else {
+      console.log("2. 구글 이미지가 아니거나 이미 처리된 주소입니다.");
+    }
+
+    const user = new User({
+      name,
+      email,
+      googleId,
+      phone,
+      provider: "google",
+      password: "social-login-temp-password-" + Math.random() * 100,
+      marketingAgree: marketingAgree || false,
+      privacySettings: {
+        isImagePublic: true,
+        isEmailPublic: false,
+        isGithubPublic: true,
+        isBioPublic: true,
+      },
+      profile: {
+        profileImage: finalProfileImage,
+        techStack: techStacks || [],
+      },
+    });
+    await user.save();
+    console.log("4. DB 저장 완료");
+
+    const token = await user.generateToken();
+    res.status(201).json({ status: "success", token, user: user });
+  } catch (error) {
+    console.error("!!! 전체 가입 로직 에러:", error.message);
+    res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
@@ -77,26 +162,23 @@ userController.loginWithGoogle = async (req, res) => {
       idToken: token,
       audience: GOOGLE_CLIENT_ID,
     });
-    const { email, name, picture } = ticket.getPayload();
+    const { email, name, picture, sub } = ticket.getPayload();
+
     let user = await User.findOne({ email });
+
     if (!user) {
-      const uploadResponse = await cloudinary.uploader.upload(picture, {
-        folder: "sidemate_profiles",
-      });
-      const randomPassword = "" + Math.floor(Math.random() * 100000000);
-      const salt = await bcrypt.genSalt(10);
-      const newPassword = await bcrypt.hash(randomPassword, salt);
-      user = new User({
-        name,
-        email,
-        password: newPassword,
-        profile: {
-          profileImage: uploadResponse.secure_url,
-          techStack: [],
+      return res.status(200).json({
+        status: "success",
+        isNewUser: true,
+        user: {
+          email,
+          name,
+          picture,
+          googleId: sub,
         },
       });
-      await user.save();
     }
+
     const sessionToken = await user.generateToken();
     res.status(200).json({ status: "success", user, token: sessionToken });
   } catch (error) {
@@ -109,7 +191,12 @@ userController.getUser = async (req, res) => {
   try {
     const { userId } = req;
     const user = await User.findById(userId);
-    if (!user) throw new Error("유저를 찾을 수 없습니다.");
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "가입되지 않은 유저입니다. 온보딩이 필요합니다.",
+      });
+    }
 
     res.status(200).json({ status: "success", user });
   } catch (error) {
@@ -120,13 +207,23 @@ userController.getUser = async (req, res) => {
 userController.updateUser = async (req, res) => {
   try {
     const { userId } = req;
-    const { name, profile } = req.body;
+    const { name, profile, phone, marketingAgree, privacySettings } = req.body;
+
+    if (phone) {
+      const phoneExists = await User.findOne({ phone, _id: { $ne: userId } });
+      if (phoneExists) {
+        throw new Error("이미 사용 중인 휴대폰 번호입니다.");
+      }
+    }
 
     const user = await User.findByIdAndUpdate(
       userId,
       {
         $set: {
           name,
+          phone,
+          marketingAgree,
+          privacySettings,
           "profile.techStack": profile?.techStack,
           "profile.gitUrl": profile?.gitUrl,
           "profile.bio": profile?.bio,
@@ -153,6 +250,27 @@ userController.checkEmail = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+
+    return res.status(200).json({
+      status: "success",
+      isDuplicate: !!user,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      status: "fail",
+      message: error.message,
+    });
+  }
+};
+
+userController.checkPhone = async (req, res) => {
+  try {
+    const { phone } = req.query;
+    if (!phone) {
+      throw new Error("휴대폰 번호를 입력해주세요.");
+    }
+
+    const user = await User.findOne({ phone });
 
     return res.status(200).json({
       status: "success",
