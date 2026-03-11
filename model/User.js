@@ -57,6 +57,10 @@ const userSchema = Schema(
       type: Boolean,
       default: false,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
     privacySettings: {
       isImagePublic: { type: Boolean, default: false },
       isEmailPublic: { type: Boolean, default: false },
