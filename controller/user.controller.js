@@ -1,7 +1,6 @@
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
-const AiQuota = require("../model/AiQuota");
 const cloudinary = require("cloudinary").v2;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
@@ -47,11 +46,6 @@ userController.register = async (req, res) => {
     });
 
     await newUser.save();
-
-    // ai 사용 횟수 db 생성
-    await AiQuota.create({
-      userId: newUser._id,
-    });
 
     return res.status(200).json({ status: "success", user: newUser });
   } catch (error) {
@@ -182,12 +176,6 @@ userController.loginWithGoogle = async (req, res) => {
           picture,
           googleId: sub,
         },
-      });
-      await user.save();
-
-      // ai 사용 횟수 db 생성
-      await AiQuota.create({
-        userId: user._id,
       });
     }
 

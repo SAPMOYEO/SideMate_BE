@@ -34,14 +34,14 @@ authController.isAdminCheck = async (req, res, next) => {
   try {
     const { userId } = req;
 
-    // env var 기반 admin 토큰: DB 조회 없이 바로 통과
     if (userId === "admin") {
       req.user = { _id: "admin", role: "admin" };
       return next();
     }
 
     const user = await User.findById(userId);
-    if (!user || user.role !== "admin") throw new Error("관리자 권한이 없습니다.");
+    if (!user || user.role !== "admin")
+      throw new Error("관리자 권한이 없습니다.");
     req.user = user;
     next();
   } catch (error) {
