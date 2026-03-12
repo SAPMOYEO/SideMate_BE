@@ -18,6 +18,15 @@ const paymentSchema = new mongoose.Schema(
     payAmount: { type: Number, required: true, min: 0 },
 
     status: { type: String, enum: ["PAID", "CANCELED"], default: "PAID" }, // 결제 상태
+
+    status: { type: String, enum: ["PAID", "CANCELED"], default: "PAID" }, // 결제 상태
+
+    // 카드 결제 시 저장
+    cardLastFour: { type: String },
+
+    // 현금 결제 시 저장
+    bankName: { type: String },
+    accountNumberMasked: { type: String },
   },
   { timestamps: true },
 );

@@ -99,7 +99,7 @@ paymentController.getPaymentDetail = async (req, res) => {
 paymentController.createPayment = async (req, res) => {
   try {
     const { userId } = req;
-    const { idempotencyKey, method, type } = req.body;
+    const { idempotencyKey, method, type, cardLastFour, bankName, accountNumberMasked } = req.body;
 
     assertUser(userId);
     assertIdempotencyKey(idempotencyKey);
@@ -146,6 +146,9 @@ paymentController.createPayment = async (req, res) => {
         quantity: qty,
         payAmount,
         status: "PAID",
+        cardLastFour: method === "CARD" ? cardLastFour : undefined,
+        bankName: method === "CASH" ? bankName : undefined,
+        accountNumberMasked: method === "CASH" ? accountNumberMasked : undefined,
       });
 
       const quota = await AiQuota.findOneAndUpdate(
@@ -177,6 +180,9 @@ paymentController.createPayment = async (req, res) => {
       quantity: 0,
       payAmount: rule.priceKRW,
       status: "PAID",
+      cardLastFour: method === "CARD" ? cardLastFour : undefined,
+      bankName: method === "CASH" ? bankName : undefined,
+      accountNumberMasked: method === "CASH" ? accountNumberMasked : undefined,
     });
 
     const subscription = await Subscription.findOneAndUpdate(
@@ -240,7 +246,7 @@ paymentController.createPayment = async (req, res) => {
 paymentController.updatePayment = async (req, res) => {
   try {
     const { userId } = req;
-    const { idempotencyKey, method, plan } = req.body;
+    const { idempotencyKey, method, plan, cardLastFour, bankName, accountNumberMasked } = req.body;
 
     assertUser(userId);
     assertIdempotencyKey(idempotencyKey);
@@ -279,6 +285,9 @@ paymentController.updatePayment = async (req, res) => {
       quantity: 0,
       payAmount: rule.priceKRW,
       status: "PAID",
+      cardLastFour: method === "CARD" ? cardLastFour : undefined,
+      bankName: method === "CASH" ? bankName : undefined,
+      accountNumberMasked: method === "CASH" ? accountNumberMasked : undefined,
     });
 
     const subscription = await Subscription.findOneAndUpdate(
