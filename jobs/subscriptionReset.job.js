@@ -52,6 +52,9 @@ subscriptionResetJob.run = async () => {
         quantity: 0,
         payAmount: rule.priceKRW,
         status: "PAID",
+        cardLastFour: undefined,
+        bankName: undefined,
+        accountNumberMasked: undefined,
       });
     }
 

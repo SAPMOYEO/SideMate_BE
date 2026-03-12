@@ -1,7 +1,6 @@
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
-const AiQuota = require("../model/AiQuota");
 const cloudinary = require("cloudinary").v2;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const { addOneMonthCalendar } = require("../utils/date.util");
@@ -184,7 +183,6 @@ userController.loginWithGoogle = async (req, res) => {
           googleId: sub,
         },
       });
-      await user.save();
     }
 
     const sessionToken = await user.generateToken();
