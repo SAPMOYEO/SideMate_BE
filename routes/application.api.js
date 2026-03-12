@@ -19,6 +19,11 @@ router.put(
   authController.authenticate,
   applicationController.updateApplication,
 );
+router.patch(
+  "/:id/status",
+  authController.authenticate,
+  applicationController.updateApplicantStatus,
+);
 router.delete(
   "/:id",
   authController.authenticate,

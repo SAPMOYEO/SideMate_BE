@@ -217,4 +217,28 @@ applicationController.getMyApplication = async (req, res) => {
     return res.status(400).json({ status: "fail", message: error.message });
   }
 };
+applicationController.updateApplicantStatus = async (req, res) => {
+  try {
+    const { userId } = req;
+    const { status } = req.body;
+    const application = await Application.findByIdAndUpdate(req.params.id, {
+      status: status,
+    }).populate("project", "author");
+    //
+    if (!application)
+      return res
+        .status(404)
+        .json({ status: "fail", message: "지원 정보 없음" });
+
+    if (String(userId) !== String(application.project.author)) {
+      return res.status(403).json({ status: "fail", message: "권한 없음" });
+    }
+
+    await application.save();
+
+    return res.status(200).json({ status: "success", data: true });
+  } catch (error) {
+    res.status(400).json({ status: "fail", message: error.message });
+  }
+};
 module.exports = applicationController;
