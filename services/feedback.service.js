@@ -3,7 +3,7 @@ const AiQuota = require("../model/AiQuota");
 const aiUsageService = require("./aiUsage.service");
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 // 프롬프트에 안전하게 넣기 위한 값 정리
 function safeField(value) {
