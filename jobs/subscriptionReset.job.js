@@ -2,9 +2,9 @@
 // 자동 결제 Payment 기록을 생성
 // 구독 추가분을 지급
 
-const Subscription = require("../models/Subscription");
-const AiQuota = require("../models/AiQuota");
-const Payment = require("../models/Payment");
+const Subscription = require("../model/Subscription");
+const AiQuota = require("../model/AiQuota");
+const Payment = require("../model/Payment");
 
 const { PLANS } = require("../constants/plans");
 const { addOneMonthCalendar } = require("../utils/date.util");
@@ -50,8 +50,11 @@ subscriptionResetJob.run = async () => {
         type: "SUBSCRIPTION",
         plan: sub.plan,
         quantity: 0,
-        amountKRW: rule.priceKRW,
+        payAmount: rule.priceKRW,
         status: "PAID",
+        cardLastFour: undefined,
+        bankName: undefined,
+        accountNumberMasked: undefined,
       });
     }
 
