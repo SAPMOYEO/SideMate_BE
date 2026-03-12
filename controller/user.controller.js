@@ -4,6 +4,7 @@ const { OAuth2Client } = require("google-auth-library");
 const AiQuota = require("../model/AiQuota");
 const cloudinary = require("cloudinary").v2;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const { addOneMonthCalendar } = require("../utils/date.util");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -49,8 +50,12 @@ userController.register = async (req, res) => {
     await newUser.save();
 
     // ai 사용 횟수 db 생성
+    const now = new Date();
+
     await AiQuota.create({
       userId: newUser._id,
+      freeCycleAnchorAt: now,
+      freeResetAt: addOneMonthCalendar(now),
     });
 
     return res.status(200).json({ status: "success", user: newUser });
@@ -61,15 +66,7 @@ userController.register = async (req, res) => {
 
 userController.registerSocialUser = async (req, res, next) => {
   try {
-    const {
-      googleId,
-      email,
-      name,
-      phone,
-      techStacks,
-      profileImage,
-      marketingAgree,
-    } = req.body;
+    const { googleId, email, name, phone, techStacks, profileImage, marketingAgree } = req.body;
 
     if (!email || !name) {
       throw new Error("필수 정보(이메일, 이름)가 누락되었습니다.");
@@ -81,8 +78,7 @@ userController.registerSocialUser = async (req, res, next) => {
 
     if (
       profileImage &&
-      (profileImage.includes("googleusercontent") ||
-        profileImage.includes("ggpht"))
+      (profileImage.includes("googleusercontent") || profileImage.includes("ggpht"))
     ) {
       try {
         console.log("2. Cloudinary 업로드 시도 중...");
@@ -95,10 +91,7 @@ userController.registerSocialUser = async (req, res, next) => {
           console.log("3. Cloudinary 업로드 성공! 새 URL:", finalProfileImage);
         }
       } catch (uploadError) {
-        console.error(
-          "Cloudinary 구글 이미지 업로드 실패:",
-          uploadError.message,
-        );
+        console.error("Cloudinary 구글 이미지 업로드 실패:", uploadError.message);
       }
     } else {
       console.log("2. 구글 이미지가 아니거나 이미 처리된 주소입니다.");
@@ -124,6 +117,14 @@ userController.registerSocialUser = async (req, res, next) => {
       },
     });
     await user.save();
+    const now = new Date();
+
+    await AiQuota.create({
+      userId: user._id,
+      freeCycleAnchorAt: now,
+      freeResetAt: addOneMonthCalendar(now),
+    });
+
     console.log("4. DB 저장 완료");
 
     const token = await user.generateToken();
@@ -184,11 +185,6 @@ userController.loginWithGoogle = async (req, res) => {
         },
       });
       await user.save();
-
-      // ai 사용 횟수 db 생성
-      await AiQuota.create({
-        userId: user._id,
-      });
     }
 
     const sessionToken = await user.generateToken();
