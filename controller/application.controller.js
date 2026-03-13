@@ -100,7 +100,10 @@ applicationController.getApplication = async (req, res) => {
       .sort(sort)
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate("applicant", "name email")
+      .populate(
+        "applicant",
+        "name profile.techStack profile.profileImage profile.bio profile.gitUrl privacySettings",
+      )
       .exec();
 
     return res.status(200).json({
@@ -204,11 +207,15 @@ applicationController.getMyApplication = async (req, res) => {
     const condition = { applicant: userId };
     const totalCount = await Application.countDocuments(condition);
     const totalPages = Math.max(1, Math.ceil(totalCount / limit));
-    const applications = await Application.find({ applicant: userId })
+    const applications = await Application.find(condition)
       .sort(sort)
       .limit(limit)
       .skip((page - 1) * limit)
-      .populate("project", "title status deadline recruitRoles");
+      .populate("project", "title status deadline recruitRoles")
+      .populate(
+        "applicant",
+        "name profile.techStack profile.profileImage profile.bio profile.gitUrl",
+      );
 
     return res
       .status(200)
@@ -221,24 +228,89 @@ applicationController.updateApplicantStatus = async (req, res) => {
   try {
     const { userId } = req;
     const { status } = req.body;
-    const application = await Application.findByIdAndUpdate(req.params.id, {
-      status: status,
-    }).populate("project", "author");
-    //
-    if (!application)
+    const applicationId = req.params.id;
+
+    const application =
+      await Application.findById(applicationId).populate("project");
+
+    if (!application) {
       return res
         .status(404)
-        .json({ status: "fail", message: "지원 정보 없음" });
-
-    if (String(userId) !== String(application.project.author)) {
-      return res.status(403).json({ status: "fail", message: "권한 없음" });
+        .json({ status: "fail", message: "지원 정보를 찾을 수 없습니다." });
     }
 
+    if (String(userId) !== String(application.project.author)) {
+      return res.status(403).json({
+        status: "fail",
+        message: "권한이 없습니다. 리더만 처리 가능합니다.",
+      });
+    }
+
+    if (application.status === status) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "이미 처리된 상태입니다." });
+    }
+
+    if (status === "APPROVED") {
+      const targetProject = await Project.findById(application.project._id);
+
+      const roleIndex = targetProject.recruitRoles.findIndex(
+        (r) => r.role === application.role,
+      );
+
+      if (roleIndex === -1) {
+        return res
+          .status(400)
+          .json({ status: "fail", message: "해당 역할을 찾을 수 없습니다." });
+      }
+
+      const roleInfo = targetProject.recruitRoles[roleIndex];
+
+      const approvedCount = await Application.countDocuments({
+        project: application.project._id,
+        role: application.role,
+        status: { $in: ["APPROVED", "ACCEPTED"] },
+      });
+
+      if (approvedCount >= roleInfo.cnt) {
+        return res.status(400).json({
+          status: "fail",
+          message: `${application.role} 포지션은 이미 정원이 가득 찼습니다.`,
+        });
+      }
+
+      targetProject.recruitRoles[roleIndex].currentCnt = approvedCount + 1;
+      await targetProject.save();
+    }
+
+    if (status === "REJECTED") {
+      const wasApproved =
+        application.status === "APPROVED" || application.status === "ACCEPTED";
+      if (wasApproved) {
+        const targetProject = await Project.findById(application.project._id);
+        const roleIndex = targetProject.recruitRoles.findIndex(
+          (r) => r.role === application.role,
+        );
+        if (roleIndex !== -1) {
+          const approvedCountAfterReject = await Application.countDocuments({
+            project: application.project._id,
+            role: application.role,
+            status: { $in: ["APPROVED", "ACCEPTED"] },
+            _id: { $ne: applicationId },
+          });
+          targetProject.recruitRoles[roleIndex].currentCnt =
+            approvedCountAfterReject;
+          await targetProject.save();
+        }
+      }
+    }
+    application.status = status;
     await application.save();
 
-    return res.status(200).json({ status: "success", data: true });
+    return res.status(200).json({ status: "success", data: application });
   } catch (error) {
-    res.status(400).json({ status: "fail", message: error.message });
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 module.exports = applicationController;
