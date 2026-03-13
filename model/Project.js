@@ -32,10 +32,6 @@ const projectSchema = Schema(
       type: [String],
       required: true,
     },
-    // mandatoryTechStack: {
-    //   type: [String],
-    //   required: true,
-    // },
     recruitRoles: {
       type: [
         {
@@ -45,6 +41,11 @@ const projectSchema = Schema(
           },
           cnt: {
             type: Number,
+            required: true,
+          },
+          currentCnt: {
+            type: Number,
+            default: 0,
             required: true,
           },
         },
