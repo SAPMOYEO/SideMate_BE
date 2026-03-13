@@ -41,13 +41,15 @@ function buildPrompts(inputSnapshot) {
 반드시 JSON 형식으로만 응답하세요.
 
 데이터 구조 규칙:
-1. "strengths"는 문자열 배열이어야 합니다.
-2. "weaknesses"는 문자열 배열이어야 합니다.
-3. "suggestions"는 문자열 배열이어야 합니다.
-4. 각 배열에는 1개 이상 3개 이하의 항목만 포함하세요.
-5. 각 항목은 자연스럽고 이해하기 쉬운 한국어 문장으로 작성하세요.
-6. 점수, 별점, 숫자 평가, 등급은 절대 포함하지 마세요.
-7. JSON 외의 다른 문장은 절대 포함하지 마세요.
+1. "overallComment"는 문자열이어야 합니다.
+2. "strengths"는 문자열 배열이어야 합니다.
+3. "weaknesses"는 문자열 배열이어야 합니다.
+4. "suggestions"는 문자열 배열이어야 합니다.
+5. 각 배열에는 1개 이상 3개 이하의 항목만 포함하세요.
+6. 각 항목은 자연스럽고 이해하기 쉬운 한국어 문장으로 작성하세요.
+7. "overallComment"는 전체적인 평가와 핵심 보완 방향을 자연스럽게 정리한 4~5문장 정도의 문단이어야 합니다.
+8. 점수, 별점, 숫자 평가, 등급은 절대 포함하지 마세요.
+9. JSON 외의 다른 문장은 절대 포함하지 마세요.
 
 분석 기준:
 - 프로젝트 목표가 명확한지
@@ -104,6 +106,12 @@ function parseJsonSafely(text) {
   }
 }
 
+// 문자열 단일값 정리
+function normalizeString(value, fallback) {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
 // 문자열 배열 정리
 function normalizeStringArray(value, fallback) {
   if (!Array.isArray(value)) {
@@ -122,6 +130,10 @@ function normalizeStringArray(value, fallback) {
 // Gemini 응답 검증 / fallback
 function validateFeedbackResponse(parsed) {
   return {
+    overallComment: normalizeString(
+      parsed?.overallComment,
+      "전체적으로 프로젝트의 방향은 보이지만, 모집글의 구체성과 참여 매력을 조금 더 보완하면 더 좋은 결과를 기대할 수 있습니다.",
+    ),
     strengths: normalizeStringArray(
       parsed?.strengths,
       "프로젝트의 기본 방향은 어느 정도 드러나 있습니다.",
@@ -271,6 +283,7 @@ async function requestProjectFeedbackAndSave({
       project: projectId,
       tempProjectId,
       type,
+      overallComment: normalized.overallComment,
       strengths: normalized.strengths,
       weaknesses: normalized.weaknesses,
       suggestions: normalized.suggestions,
@@ -307,6 +320,7 @@ async function requestProjectFeedbackAndSave({
     return {
       feedbackId: savedFeedback._id,
       feedback: {
+        overallComment: savedFeedback.overallComment,
         strengths: savedFeedback.strengths,
         weaknesses: savedFeedback.weaknesses,
         suggestions: savedFeedback.suggestions,
