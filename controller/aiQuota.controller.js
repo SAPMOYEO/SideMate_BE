@@ -1,4 +1,5 @@
 const AiQuota = require("../model/AiQuota");
+const { addOneMonthCalendar } = require("../utils/date.util");
 
 function assertUser(userId) {
   if (!userId) throw new Error("UNAUTHORIZED");
@@ -8,9 +9,13 @@ async function ensureQuotaDoc(userId) {
   let quota = await AiQuota.findOne({ userId });
 
   if (!quota) {
+    const now = new Date();
+
     quota = await AiQuota.create({
       userId,
       freeRemaining: 3,
+      freeCycleAnchorAt: now,
+      freeResetAt: addOneMonthCalendar(now),
       topUpRemaining: 0,
       subGrantPerPeriod: 0,
       subCarryCap: 0,

@@ -11,9 +11,14 @@ function calcExpiresAt() {
 }
 
 function pickBucket(quota) {
-  if (quota.topUpRemaining - quota.holds.topUp > 0) return "topUp";
-  if (quota.subExtraRemaining - quota.holds.subExtra > 0) return "subExtra";
-  if (quota.freeRemaining - quota.holds.free > 0) return "free";
+  const holds = quota.holds || {};
+  const topUpHold = holds.topUp || 0;
+  const subExtraHold = holds.subExtra || 0;
+  const freeHold = holds.free || 0;
+
+  if ((quota.topUpRemaining || 0) - topUpHold > 0) return "topUp";
+  if ((quota.subExtraRemaining || 0) - subExtraHold > 0) return "subExtra";
+  if ((quota.freeRemaining || 0) - freeHold > 0) return "free";
   return null;
 }
 
@@ -79,6 +84,7 @@ aiUsageService.commitHold = async ({ userId, requestId }) => {
         ...(bucket === "topUp" ? { topUpRemaining: -1 } : {}),
         ...(bucket === "subExtra" ? { subExtraRemaining: -1 } : {}),
         ...(bucket === "free" ? { freeRemaining: -1 } : {}),
+        totalUsed: usage.amount,
       },
     },
   );
@@ -112,6 +118,7 @@ aiUsageService.cancelHold = async ({ userId, requestId, reason, errorMessage }) 
   if (quotaUpdate.modifiedCount !== 1) throw new Error("HOLD_RELEASE_FAILED");
 
   usage.state = nextState;
+  usage.reason = reason || undefined;
   usage.errorMessage = errorMessage || undefined;
   usage.completedAt = new Date();
   await usage.save();
