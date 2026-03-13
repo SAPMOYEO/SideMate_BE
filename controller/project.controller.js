@@ -281,6 +281,7 @@ projectController.getProjectByMe = async (req, res) => {
     const totalCount = await Project.countDocuments(condition);
     const totalPages = Math.max(1, Math.ceil(totalCount / limit));
     const myProject = await Project.find({ author: userId })
+      .sort("-updatedAt")
       .skip((page - 1) * limit)
       .limit(limit);
     res
