@@ -31,13 +31,22 @@ const feedbackSchema = Schema(
       type: String,
       required: true,
     },
-
+    overallComment: {
+      type: String,
+      required: true,
+      default: "",
+    },
     strengths: {
       type: [String],
       default: [],
       required: true,
     },
     weaknesses: {
+      type: [String],
+      default: [],
+      required: true,
+    },
+    suggestions: {
       type: [String],
       default: [],
       required: true,
