@@ -2,7 +2,8 @@
 const Application = require("../model/Application");
 const Project = require("../model/Project");
 const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10;
-
+const createNotifcation = require("./notification.controller");
+const notiController = require("./notification.controller");
 const applicationController = {};
 
 const parsePositiveInt = (value, fallback) => {
@@ -68,6 +69,17 @@ applicationController.createApplication = async (req, res) => {
 
     await application.save();
 
+    try {
+      await notiController.createNotification({
+        receiver: targetProject.author,
+        actor: userId,
+        relatedProject: project,
+        relatedApplication: application._id,
+        messageType: "NEW_APPLICANT",
+      });
+    } catch (error) {
+      console.log(error);
+    }
     return res.status(200).json({ status: "success", application });
   } catch (error) {
     return res.status(400).json({ status: "fail", message: error.message });
@@ -307,7 +319,21 @@ applicationController.updateApplicantStatus = async (req, res) => {
     }
     application.status = status;
     await application.save();
-
+    // 지원 상태 거절 및 승인 시 알람
+    try {
+      await notiController.createNotification({
+        receiver: application.applicant,
+        actor: userId,
+        relatedProject: application.project._id,
+        relatedApplication: application._id,
+        messageType:
+          status === "APPROVED"
+            ? "APPLICATION_APPROVED"
+            : "APPLICATION_REJECTED",
+      });
+    } catch (error) {
+      console.log(error);
+    }
     return res.status(200).json({ status: "success", data: application });
   } catch (error) {
     return res.status(400).json({ status: "fail", message: error.message });
