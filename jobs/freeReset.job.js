@@ -1,6 +1,6 @@
 // freeResetAt이 만료된 유저의 무료 횟수를 미리 리필
 
-const AiQuota = require("../models/AiQuota");
+const AiQuota = require("../model/AiQuota");
 const { FREE_GRANT } = require("../constants/plans");
 const { addOneMonthCalendar } = require("../utils/date.util");
 

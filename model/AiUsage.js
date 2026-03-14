@@ -1,6 +1,3 @@
-// AI 사용 관련 스키마
-
-//*** mongoose 세팅 ***//
 const mongoose = require("mongoose");
 
 const User = require("./User");
@@ -8,10 +5,39 @@ const Project = require("./Project");
 
 const aiUsageSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.ObjectId, ref: User, required: true },
-    requestId: { type: String, required: true, unique: true }, // 연타, 재시도 등 요청 한 번 처리되게 방지
-    postId: { type: mongoose.Schema.Types.ObjectId, ref: Project }, // 게시글 등록 스키마 참조
-    amount: { type: Number, default: 1, min: 1 }, // 1회 요청->1회 차감
+    userId: {
+      type: mongoose.ObjectId,
+      ref: User,
+      required: true,
+    },
+
+    // 같은 요청 중복 처리 방지용
+    requestId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    // 생성 전이면 없을 수도 있고, 생성 후 상세페이지 요청이면 연결 가능
+    postId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: Project,
+      default: null,
+    },
+
+    // 어떤 자원에서 차감 예약되었는지
+    bucket: {
+      type: String,
+      enum: ["topUp", "subExtra", "free"],
+      required: true,
+    },
+
+    // 1회 요청 = 1회 차감
+    amount: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
 
     state: {
       type: String,
@@ -19,11 +45,28 @@ const aiUsageSchema = new mongoose.Schema(
       default: "HOLD",
       index: true,
     },
-    // -> 요청시점(HOLD), 요청성공(SUCCESS), 요청실패(FAILED), 요청취소(CANCELED), 요청만료(EXPIRED)
 
-    expiresAt: { type: Date, required: true, index: true },
+    // 실패/취소 이유 기록용
+    reason: {
+      type: String,
+    },
 
-    completedAt: { type: Date },
+    // 에러 메시지 기록용
+    errorMessage: {
+      type: String,
+    },
+
+    // HOLD 만료 시간
+    expiresAt: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+
+    // 완료 시간
+    completedAt: {
+      type: Date,
+    },
   },
   { timestamps: true },
 );

@@ -1,4 +1,6 @@
 ﻿const Project = require("../model/Project");
+const Application = require("../model/Application");
+const Feedback = require("../model/Feedback");
 const PAGE_SIZE = Number(process.env.PROJECT_PAGE_SIZE) || 5;
 const projectController = {};
 
@@ -60,7 +62,6 @@ projectController.createProject = async (req, res) => {
       startDate,
       endDate,
       requiredTechStack,
-      mandatoryTechStack,
       recruitRoles,
       totalCnt,
       deadline,
@@ -68,6 +69,7 @@ projectController.createProject = async (req, res) => {
       status,
       gitUrl,
       aiFeedbackIds,
+      tempProjectId,
     } = req.body;
 
     const { userId } = req;
@@ -79,7 +81,6 @@ projectController.createProject = async (req, res) => {
       startDate,
       endDate,
       requiredTechStack,
-      mandatoryTechStack,
       recruitRoles,
       totalCnt,
       deadline,
@@ -92,8 +93,23 @@ projectController.createProject = async (req, res) => {
 
     await project.save();
 
+    // 생성 전 draft 상태로 저장된 AI 피드백을 실제 프로젝트에 연결
+    if (tempProjectId) {
+      await Feedback.updateMany(
+        {
+          user: userId,
+          tempProjectId,
+          project: null,
+        },
+        {
+          $set: { project: project._id },
+        },
+      );
+    }
+
     return res.status(200).json({ status: "success", project });
   } catch (error) {
+    console.error("createProject error:", error);
     return res.status(400).json({ status: "fail", message: error.message });
   }
 };
@@ -173,6 +189,35 @@ projectController.getProjects = async (req, res) => {
       .populate("author", "name email")
       .exec();
 
+    if (projectList.length > 0) {
+      const projectIds = projectList.map((p) => p._id);
+      const counts = await Application.aggregate([
+        {
+          $match: {
+            project: { $in: projectIds },
+            status: { $in: ["APPROVED", "ACCEPTED"] },
+          },
+        },
+        {
+          $group: {
+            _id: { project: "$project", role: "$role" },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+      const countMap = {};
+      counts.forEach((c) => {
+        const key = `${c._id.project}-${c._id.role}`;
+        countMap[key] = c.count;
+      });
+      projectList.forEach((p) => {
+        (p.recruitRoles || []).forEach((r) => {
+          const key = `${p._id}-${r.role}`;
+          r.currentCnt = countMap[key] != null ? countMap[key] : 0;
+        });
+      });
+    }
+
     return res.status(200).json({
       status: "success",
       data: projectList,
@@ -214,7 +259,6 @@ projectController.updateProject = async (req, res) => {
       startDate,
       endDate,
       requiredTechStack,
-      mandatoryTechStack,
       recruitRoles,
       totalCnt,
       deadline,
@@ -235,7 +279,6 @@ projectController.updateProject = async (req, res) => {
         startDate,
         endDate,
         requiredTechStack,
-        mandatoryTechStack,
         recruitRoles,
         totalCnt,
         deadline,
