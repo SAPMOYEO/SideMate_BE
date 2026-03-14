@@ -160,6 +160,13 @@ userController.login = async (req, res) => {
       throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
     }
 
+    if (user.isActive === false) {
+      return res.status(403).json({
+        status: "fail",
+        message: "계정이 정지되었습니다. 관리자에게 문의해주세요.",
+      });
+    }
+
     const token = await user.generateToken();
 
     return res.status(200).json({
@@ -194,6 +201,13 @@ userController.loginWithGoogle = async (req, res) => {
           picture,
           googleId: sub,
         },
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        status: "fail",
+        message: "계정이 정지되었습니다. 관리자에게 문의해주세요.",
       });
     }
 
