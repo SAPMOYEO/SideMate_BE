@@ -1,5 +1,5 @@
 const Feedback = require("../model/Feedback");
-const notiController =require('../controller/notification.controller')
+const notiController = require("../controller/notification.controller");
 const {
   requestProjectFeedbackAndSave,
 } = require("../services/feedback.service");
@@ -32,7 +32,7 @@ feedbackController.createProjectFeedback = async (req, res) => {
       receiver: userId,
       actor: userId,
       relatedProject: projectId,
-      messageType: "AI_FEEDBACK_COMPLETE",
+      messageType: "AI_FEEDBACK_DEPLETED",
     });
 
     return res.status(200).json({
