@@ -1,4 +1,5 @@
 const User = require("../model/User");
+const AiQuota = require("../model/AiQuota");
 const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
 const cloudinary = require("cloudinary").v2;
@@ -65,7 +66,15 @@ userController.register = async (req, res) => {
 
 userController.registerSocialUser = async (req, res, next) => {
   try {
-    const { googleId, email, name, phone, techStacks, profileImage, marketingAgree } = req.body;
+    const {
+      googleId,
+      email,
+      name,
+      phone,
+      techStacks,
+      profileImage,
+      marketingAgree,
+    } = req.body;
 
     if (!email || !name) {
       throw new Error("필수 정보(이메일, 이름)가 누락되었습니다.");
@@ -77,7 +86,8 @@ userController.registerSocialUser = async (req, res, next) => {
 
     if (
       profileImage &&
-      (profileImage.includes("googleusercontent") || profileImage.includes("ggpht"))
+      (profileImage.includes("googleusercontent") ||
+        profileImage.includes("ggpht"))
     ) {
       try {
         console.log("2. Cloudinary 업로드 시도 중...");
@@ -87,10 +97,12 @@ userController.registerSocialUser = async (req, res, next) => {
         });
         if (uploadResponse.secure_url) {
           finalProfileImage = uploadResponse.secure_url;
-          console.log("3. Cloudinary 업로드 성공! 새 URL:", finalProfileImage);
         }
       } catch (uploadError) {
-        console.error("Cloudinary 구글 이미지 업로드 실패:", uploadError.message);
+        console.error(
+          "Cloudinary 구글 이미지 업로드 실패:",
+          uploadError.message,
+        );
       }
     } else {
       console.log("2. 구글 이미지가 아니거나 이미 처리된 주소입니다.");
