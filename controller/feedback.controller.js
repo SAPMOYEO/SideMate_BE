@@ -1,5 +1,8 @@
 const Feedback = require("../model/Feedback");
-const { requestProjectFeedbackAndSave } = require("../services/feedback.service");
+const notiController =require('../controller/notification.controller')
+const {
+  requestProjectFeedbackAndSave,
+} = require("../services/feedback.service");
 const feedbackController = {};
 
 // 프로젝트 모집글 AI 피드백 생성
@@ -24,6 +27,12 @@ feedbackController.createProjectFeedback = async (req, res) => {
       tempProjectId,
       type,
       inputSnapshot,
+    });
+    await notiController.createNotification({
+      receiver: userId,
+      actor: userId,
+      relatedProject: projectId,
+      messageType: "AI_FEEDBACK_COMPLETE",
     });
 
     return res.status(200).json({
