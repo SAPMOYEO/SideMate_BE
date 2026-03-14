@@ -1,15 +1,39 @@
-const bodyParser = require('body-parser');
-const express = require('express');
+﻿console.log("--- 서버 시작 시도 ---");
+console.log("포트:", process.env.PORT);
+console.log("DB 주소 존재 여부:", process.env.DB_ADDRESS ? "있음" : "없음!!");
+
+if (!process.env.DB_ADDRESS) {
+  console.error("CRITICAL ERROR: DB_ADDRESS 환경 변수가 설정되지 않았습니다.");
+}
+
+process.on("uncaughtException", (err) => {
+  console.error("서버가 죽기 전 마지막 비명:", err);
+});
+
+const bodyParser = require("body-parser");
+const express = require("express");
 const app = express();
 const cors = require("cors");
-const dotenv = require("dotenv");
-const port = 3000;
+const mongoose = require("mongoose");
+require("dotenv").config();
+const port = process.env.PORT || 5000;
+const indexRouter = require("./routes/index");
+const passport = require("passport");
 
 // Middleware
+app.set("query parser", "extended");
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
+app.use(passport.initialize());
+app.use("/api", indexRouter);
+
+const dbUri = process.env.DB_ADDRESS;
+mongoose
+  .connect(dbUri)
+  .then(() => console.log("mongoose connected"))
+  .catch((err) => console.log("DB connection failed", err));
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
