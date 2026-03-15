@@ -124,6 +124,7 @@ adminController.getBanners = async (req, res) => {
     const skip = page ? (page - 1) * limit : 0;
 
     const totalCount = await Banner.countDocuments();
+    const activeCount = await Banner.countDocuments({ isActive: true });
     const totalPages = Math.ceil(totalCount / limit);
     const banners = await Banner.find()
       .sort({ isActive: -1, createdAt: -1 })
@@ -132,6 +133,7 @@ adminController.getBanners = async (req, res) => {
     res.status(200).json({
       data: banners,
       totalCount,
+      activeCount,
       totalPages,
     });
   } catch (err) {
